@@ -75,6 +75,7 @@ async def on_message(message: discord.Message):
 		print(f"saved to {path}")
 		queue.enqueue(200, sound._load_sounds)
 		await message.reply(f"✅ saved to \"{path}\".")
+		sound.try_play_next(path.stem)
 
 if not isinstance(db.get("token"), str):
 	raise TypeError(f"discord token was not string (got {db.get('token')} instead)")
