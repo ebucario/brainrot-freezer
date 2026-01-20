@@ -1,3 +1,6 @@
+"""handles sigterm"""
+
+import sys
 import signal
 
 def _handle_sigterm(_signal_number, _stack_frame):

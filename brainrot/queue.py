@@ -1,6 +1,8 @@
 """contains task queue and tools to enqueue and consume"""
 
 import queue
+from dataclasses import dataclass, field
+from typing import Any
 
 # convention: items are (priority, callable)
 # p0 is critical
