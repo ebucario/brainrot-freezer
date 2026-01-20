@@ -68,6 +68,8 @@ async def on_message(message: discord.Message):
 	for attachment in message.attachments:
 		if attachment.content_type.startswith('audio') and attachment.content_type != 'audio/ogg':
 			return await message.reply("ℹ️ currently only brainrot in .ogg format works.")
+		if attachment.content_type != 'audio/ogg':
+			return
 		filename = attachment.filename
 		print(f"found sound: {filename}")
 		path = Path(sound.SOUND_PATH, filename)
@@ -82,8 +84,8 @@ if not isinstance(db.get("token"), str):
 
 # async def setup_hook():
 # 	print("attempting to sync tree...")
-# 	print(bot.tree.copy_global_to(guild=discord.Object(id=1012522655460638730)))
-# 	print(await bot.tree.sync(guild=discord.Object(id=1012522655460638730)))
+# 	print(bot.tree.copy_global_to(guild=discord.Object(id=1262554097723117568)))
+# 	print(await bot.tree.sync(guild=discord.Object(id=1262554097723117568)))
 # 	print("tree synced!")
 
 # bot.setup_hook = setup_hook
