@@ -11,7 +11,7 @@ from .db import db
 intents = discord.Intents.default()
 intents.message_content = True
 
-bot = Bot(command_prefix='/', description="""brainrot bot""", intents=intents)
+bot = Bot(command_prefix=(), description="""brainrot bot""", intents=intents)
 
 if not isinstance(db.get("channels"), MutableMapping):
 	db["channels"] = {}
@@ -66,7 +66,16 @@ async def on_message(message):
 if not isinstance(db.get("token"), str):
 	raise TypeError(f"discord token was not string (got {db.get('token')} instead)")
 
+async def setup_hook():
+	print("attempting to sync tree...")
+	print(bot.tree.copy_global_to(guild=discord.Object(id=1012522655460638730)))
+	print(await bot.tree.sync(guild=discord.Object(id=1012522655460638730)))
+	print("tree synced!")
+
+bot.setup_hook = setup_hook
+
 def run_bot():
 	bot.run(db["token"])
 
-Thread(target=run_bot, daemon=True).start()
+# Thread(target=run_bot, daemon=True).start()
+run_bot()
