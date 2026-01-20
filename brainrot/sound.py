@@ -1,16 +1,20 @@
+"""initializes sound engine and provides methods to play sounds"""
+
 import os
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 import pygame
+import random
 
 from . import queue
 
 pygame.mixer.init(buffer=4096)
+random.seed()
 
 SOUND_PATH = "./sounds"
 
 loaded_sounds = {}
 
-def load_sounds():
+def _load_sounds():
 	glob = Path(SOUND_PATH).glob("*.ogg")
 	def load_sound(path):
 		if path not in loaded_sounds:
@@ -19,6 +23,8 @@ def load_sounds():
 				print(f"loaded sound: {sound['name']}")
 	for s in glob:
 			queue.enqueue(200, lambda s=s: load_sound(s))
+
+queue.enqueue(200, _load_sounds)
 
 def queue_random_sound():
 	def play_sound():

@@ -1,3 +1,5 @@
+"""contains task queue and tools to enqueue and consume"""
+
 import queue
 
 # convention: items are (priority, callable)
