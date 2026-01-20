@@ -1,0 +1,1 @@
+sudo ln /app/brainrot/brainrot.service /etc/systemd/system/brainrot.service
