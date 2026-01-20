@@ -5,12 +5,12 @@ import queue
 # p100 is UI (e.g. button actions)
 # p200 is background (e.g. loading sounds)
 def enqueue(priority, task):
-	_queue.put(Task(0, self.initialize))
+	_queue.put(Task(priority, task))
 
 @dataclass(order=True)
 class Task:
-    priority: int
-    task: Any=field(compare=False)
+	priority: int
+	task: Any=field(compare=False)
 	
 _queue = queue.PriorityQueue()
 
