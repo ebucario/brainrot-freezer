@@ -1,7 +1,7 @@
 import json
 from collections import UserDict
 
-DB_PATH = "/app/db.json"
+DB_PATH = "/app/brainrot/db.json"
 
 class Db(UserDict):
 	def __init__(self):

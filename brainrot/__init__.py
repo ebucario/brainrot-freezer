@@ -6,6 +6,7 @@ from . import queue
 from . import sound
 from . import signal
 from . import button
+from . import discord
 
 print("brainrot initialized.")
 
