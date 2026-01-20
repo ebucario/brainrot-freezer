@@ -67,14 +67,16 @@ async def on_message(message: discord.Message):
 	if len(message.attachments) == 0:
 		return
 	for attachment in message.attachments:
-		if attachment.content_type in ('video/ogg', 'audio/ogg', 'application/ogg'):
-			filename = attachment.filename
-			print(f"found sound: {filename}")
-			path = Path(sound.SOUND_PATH, filename)
-			await attachment.save(path)
-			print(f"saved to {path}")
-			queue.enqueue(200, sound._load_sounds)
-			await message.reply("✅ saved \"{path}\"")
+		if attachment.content_type not in ('video/ogg', 'audio/ogg', 'application/ogg'):
+			message.reply("ℹ️ currently only brainrot in .ogg format works.")
+			return
+		filename = attachment.filename
+		print(f"found sound: {filename}")
+		path = Path(sound.SOUND_PATH, filename)
+		await attachment.save(path)
+		print(f"saved to {path}")
+		queue.enqueue(200, sound._load_sounds)
+		await message.reply(f"✅ saved to \"{path}\".")
 
 if not isinstance(db.get("token"), str):
 	raise TypeError(f"discord token was not string (got {db.get('token')} instead)")
