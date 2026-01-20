@@ -50,8 +50,7 @@ async def brainrot_deregister_channel(inx: discord.Interaction):
 @bot.tree.command(description="consume all the messages in a channel")
 async def brainrot_consume(inx: discord.Interaction):
 	if inx.channel.id not in db["channels"]:
-		await inx.response.send_message("❌ this won't work until you register this channel.")
-		return
+		return await inx.response.send_message("❌ this won't work until you register this channel.")
 	if not hasattr(inx.channel, 'history'):
 		raise ValueError("no history in this channel")
 	async for message in inx.channel.history(oldest_first=True):
@@ -67,9 +66,8 @@ async def on_message(message: discord.Message):
 	if len(message.attachments) == 0:
 		return
 	for attachment in message.attachments:
-		if attachment.content_type not in ('video/ogg', 'audio/ogg', 'application/ogg'):
-			message.reply("ℹ️ currently only brainrot in .ogg format works.")
-			return
+		if attachment.content_type.startswith('audio') and attachment.content_type != 'audio/ogg':
+			return await message.reply("ℹ️ currently only brainrot in .ogg format works.")
 		filename = attachment.filename
 		print(f"found sound: {filename}")
 		path = Path(sound.SOUND_PATH, filename)
