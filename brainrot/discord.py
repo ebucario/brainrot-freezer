@@ -3,10 +3,8 @@ import discord
 from discord import app_commands
 from discord.ext.commands import Bot
 from threading import Thread
-from typing import cast
 
 from brainrot import sound
-from brainrot import queue
 from brainrot.db.models import DiscordToken, DiscordChannel, QueuedSound, Sound
 
 intents = discord.Intents.default()
@@ -73,9 +71,9 @@ async def on_message(message: discord.Message):
 		if path.is_file():
 			return await message.reply(f"❌ there's already a sound file at \"{path}\"!")
 		await attachment.save(path)
-		sound = Sound.create(path=path)
+		sound_ = Sound.create(path=path)
 		print(f"saved to {path}")
-		qs = QueuedSound.create(sound=sound)
+		qs = QueuedSound.create(sound=sound_)
 		await message.reply(f"✅ saved to \"{path}\".")
 
 token = DiscordToken.get_or_none()

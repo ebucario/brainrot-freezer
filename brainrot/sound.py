@@ -59,6 +59,6 @@ def play_sound():
 	if sound is None:
 		sound = random.choice(list(_sound_cache.keys()))
 	_sound_cache[sound].play()
-	sound.playcount += 1
+	sound.playcount += 1 # type: ignore
 	sound.save()
 	print(f"played {sound}")
