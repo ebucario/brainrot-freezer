@@ -6,58 +6,59 @@ os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 import pygame
 import random
 from pathlib import Path
+from typing import Dict, Iterator
 
-from . import queue
-from .db import db
+from brainrot.db.models import QueuedSound, Sound
+from brainrot import queue
 
 pygame.mixer.init(buffer=4096)
 random.seed()
 
-SOUND_PATH = "./sounds"
+SOUND_PATH = "sounds"
 
-loaded_sounds = {}
+_sound_cache: Dict[Sound, pygame.mixer.Sound] = {}
 
-if not isinstance(db.get("soundplays"), dict):
-	db["soundplays"] = {}
-
-def _load_sounds():
-	glob = list(Path(SOUND_PATH).glob("*.ogg"))
-	total = len(glob)
-	print(f"loading {total} sounds...")
-	def load_one_sound():
-		path = glob.pop()
-		if path not in loaded_sounds:
-			sound = {"sound": pygame.mixer.Sound(path), "name": path.stem}
-			loaded_sounds[path] = sound
-		current = len(glob)
-		if (total - current) % 100 == 0:
-			print(f"{total - current} sounds loaded...")
-		if current == 0:
-			print(f"all sounds loaded!")
-		else:
-			queue.enqueue(200, load_one_sound)
-	queue.enqueue(200, load_one_sound)
-
-queue.enqueue(200, _load_sounds)
-
-_try_play_next_queue = []
-
-def queue_random_sound():
-	def play_sound():
+def _load_sounds_from_db():
+	total_db = Sound.select().count()
+	print(f"loading {total_db} sounds from database...")
+	sounds: Iterator[Sound] = Sound.select().iterator()
+	def task():
 		try:
-			if len(_try_play_next_queue) > 0:
-				stem = _try_play_next_queue.pop()
-				sound = next((i for i in loaded_sounds.values() if i["name"] == stem), random.choice(list(loaded_sounds.values())))
-			else:
-				sound = random.choice(list(loaded_sounds.values()))
-			sound["sound"].play()
-			db["soundplays"][sound['name']] = db["soundplays"].get(sound['name'], 0) + 1
-			db.save()
-			print(f"played {sound['name']}")
-		except IndexError:
-			print("[error]: tried to play a sound, but no sounds loaded!", file=sys.stderr)
-	queue.enqueue(100, play_sound)
+			sound = next(sounds)
+			_sound_cache[sound] = pygame.mixer.Sound(sound.path)
+			queue.enqueue(200, task)
+		except StopIteration:
+			print(f"finished loading sounds from database!")
+	queue.enqueue(200, task)
 
-def try_play_next(stem):
-	_try_play_next_queue.append(stem)
-	print(f"trying to play {stem} next...")
+def _scan_for_new_sounds():
+	print(f"scanning for new sounds...")
+	glob = list(Path(SOUND_PATH).glob("*.ogg"))
+	total_files = len(glob)
+	print(f"found {total_files} files...")
+	def task():
+		path = glob.pop()
+		if Sound.get_or_none(Sound.path == path) is None:
+			sound = Sound.create(path=path)
+			_sound_cache[sound] = pygame.mixer.Sound(sound.path)
+			print(f"saved new sound: {sound}")
+		current = len(glob)
+		if (total_files - current) % 100 == 0:
+			print(f"{total_files - current} files scanned...")
+		if current != 0:
+			queue.enqueue(200, task)
+		else:
+			print(f"all files scanned!")
+	queue.enqueue(200, task)
+
+queue.enqueue(200, _load_sounds_from_db)
+queue.enqueue(200, _scan_for_new_sounds)
+
+def play_sound():
+	sound = (QueuedSound.select().order_by(QueuedSound.id.desc())).first()
+	if sound is None:
+		sound = random.choice(list(_sound_cache.keys()))
+	_sound_cache[sound].play()
+	sound.playcount += 1
+	sound.save()
+	print(f"played {sound}")

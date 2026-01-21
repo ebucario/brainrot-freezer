@@ -2,11 +2,11 @@
 
 print("initializing brainrot...")
 
-from . import queue
-from . import sound
-from . import signal
-from . import button
-from . import discord
+from brainrot import queue
+from brainrot import sound
+from brainrot import signal
+from brainrot import button
+from brainrot import discord
 
 print("brainrot initialized.")
 

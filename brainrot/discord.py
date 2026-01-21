@@ -5,17 +5,14 @@ from discord.ext.commands import Bot
 from threading import Thread
 from typing import cast
 
-from . import sound
-from . import queue
-from .db import db
+from brainrot import sound
+from brainrot import queue
+from brainrot.db.models import DiscordToken, DiscordChannel
 
 intents = discord.Intents.default()
 intents.message_content = True
 
 bot = Bot(command_prefix=(), description="""brainrot bot""", intents=intents)
-
-if not isinstance(db.get("channels"), list):
-	db["channels"] = []
 
 @bot.event
 async def on_ready():
@@ -27,33 +24,33 @@ bot.tree.on_error = brainrot_error
 
 @bot.tree.command(description="register this channel for brainrot integration")
 async def brainrot_register_channel(inx: discord.Interaction):
-	channel = inx.channel.id # type: ignore
-	if channel in db["channels"]:
-		await inx.response.send_message("❌ this channel was already registered.", ephemeral=True)
-	else:
-		db["channels"].append(channel)
-		db.save()
-		print(f"registered to channel: {channel}")
+	channel_id = inx.channel.id # type: ignore
+	channel = DiscordChannel.get_or_none(DiscordChannel.id == channel_id)
+	if channel is None:
+		channel = DiscordChannel.create(discord_id=channel_id)
+		print(f"registered to channel: {channel_id}")
 		await inx.response.send_message("✅ registered this channel for brainrot.")
+	else:
+		await inx.response.send_message("❌ this channel was already registered.", ephemeral=True)
 
 @bot.tree.command(description="remove this channel from brainrot integration")
 async def brainrot_deregister_channel(inx: discord.Interaction):
-	channel = inx.channel.id # type: ignore
-	try:
-		db["channels"].remove(channel)
-		db.save()
-		print(f"removed channel: {channel}")
+	channel_id = inx.channel.id # type: ignore
+	channel = DiscordChannel.get_or_none(DiscordChannel.id == channel_id)
+	if channel is not None:
+		channel.delete_instance()
 		await inx.response.send_message("✅ deregistered this channel!")
-	except ValueError:
+	else:
 		await inx.response.send_message("❌ this channel wasn't registered.")
 
 @bot.tree.command(description="consume all the messages in a channel")
 async def brainrot_consume(inx: discord.Interaction):
-	if inx.channel.id not in db["channels"]:
+	channel_id = inx.channel.id # type: ignore
+	if DiscordChannel.get_or_none(DiscordChannel.id == channel_id) is None:
 		return await inx.response.send_message("❌ this won't work until you register this channel.")
 	if not hasattr(inx.channel, 'history'):
 		raise ValueError("no history in this channel")
-	async for message in inx.channel.history(oldest_first=True):
+	async for message in inx.channel.history(oldest_first=True): # type: ignore
 		await on_message(message)
 	await inx.response.send_message("✅ successfully consumed the channel!")
 
@@ -61,12 +58,12 @@ async def brainrot_consume(inx: discord.Interaction):
 async def on_message(message: discord.Message):
 	if message.author == bot.user:
 		return
-	if message.channel.id not in db["channels"]:
+	if DiscordChannel.get_or_none(DiscordChannel.id == message.channel.id) is None:
 		return
 	if len(message.attachments) == 0:
 		return
 	for attachment in message.attachments:
-		if attachment.content_type.startswith('audio') and attachment.content_type != 'audio/ogg':
+		if attachment.content_type.startswith('audio') and attachment.content_type != 'audio/ogg': # type: ignore
 			return await message.reply("ℹ️ currently only brainrot in .ogg format works.")
 		if attachment.content_type != 'audio/ogg':
 			return
@@ -81,8 +78,10 @@ async def on_message(message: discord.Message):
 		await message.reply(f"✅ saved to \"{path}\".")
 		sound.try_play_next(path.stem)
 
-if not isinstance(db.get("token"), str):
-	raise TypeError(f"discord token was not string (got {db.get('token')} instead)")
+token = DiscordToken.get_or_none()
+
+if token is None:
+	raise TypeError(f"discord token missing! is it in the database?")
 
 # async def setup_hook():
 # 	print("attempting to sync tree...")
@@ -93,6 +92,6 @@ if not isinstance(db.get("token"), str):
 # bot.setup_hook = setup_hook
 
 def run_bot():
-	bot.run(db["token"])
+	bot.run(token.token)
 
 Thread(target=run_bot, daemon=True).start()
