@@ -73,6 +73,8 @@ async def on_message(message: discord.Message):
 		filename = attachment.filename
 		print(f"found sound: {filename}")
 		path = Path(sound.SOUND_PATH, filename)
+		if path.is_file():
+			return await message.reply(f"❌ there's already a sound file at \"{path}\"!")
 		await attachment.save(path)
 		print(f"saved to {path}")
 		queue.enqueue(200, sound._load_sounds)
