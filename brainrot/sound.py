@@ -6,7 +6,7 @@ os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 import pygame
 import random
 from pathlib import Path
-from typing import Dict, Iterator
+from typing import Dict
 
 from brainrot.db.models import QueuedSound, Sound
 from brainrot import queue
@@ -21,13 +21,13 @@ _sound_cache: Dict[Sound, pygame.mixer.Sound] = {}
 def _load_sounds_from_db():
 	total_db = Sound.select().count()
 	print(f"loading {total_db} sounds from database...")
-	sounds: Iterator[Sound] = Sound.select().iterator()
+	sounds = [s for s in Sound.select()]
 	def task():
 		try:
-			sound = next(sounds)
+			sound = sounds.pop()
 			_sound_cache[sound] = pygame.mixer.Sound(sound.path)
 			queue.enqueue(200, task)
-		except StopIteration:
+		except IndexError:
 			print(f"finished loading sounds from database!")
 	queue.enqueue(200, task)
 

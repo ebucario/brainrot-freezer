@@ -7,7 +7,7 @@ from typing import cast
 
 from brainrot import sound
 from brainrot import queue
-from brainrot.db.models import DiscordToken, DiscordChannel
+from brainrot.db.models import DiscordToken, DiscordChannel, QueuedSound, Sound
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -73,10 +73,10 @@ async def on_message(message: discord.Message):
 		if path.is_file():
 			return await message.reply(f"❌ there's already a sound file at \"{path}\"!")
 		await attachment.save(path)
+		sound = Sound.create(path=path)
 		print(f"saved to {path}")
-		queue.enqueue(200, sound._load_sounds)
+		qs = QueuedSound.create(sound=sound)
 		await message.reply(f"✅ saved to \"{path}\".")
-		sound.try_play_next(path.stem)
 
 token = DiscordToken.get_or_none()
 
