@@ -15,9 +15,9 @@ class QueuedSound(BaseModel):
 	id = pw.AutoField() # use autofield for sorting
 	sound = pw.ForeignKeyField(Sound)
 
-class DiscordChannel(BaseModel):
+class DiscordChannel(UUIDModel):
 	"""a discord channel that is registered to for commands or audio files"""
-	id = pw.IntegerField(primary_key=True)
+	discord_id = pw.IntegerField(index=True,unique=True)
 
 class DiscordToken(BaseModel):
 	token = pw.TextField(primary_key=True)

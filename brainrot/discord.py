@@ -23,7 +23,7 @@ bot.tree.on_error = brainrot_error
 @bot.tree.command(description="register this channel for brainrot integration")
 async def brainrot_register_channel(inx: discord.Interaction):
 	channel_id = inx.channel.id # type: ignore
-	channel = DiscordChannel.get_or_none(DiscordChannel.id == channel_id)
+	channel = DiscordChannel.get_or_none(DiscordChannel.discord_id == channel_id)
 	if channel is None:
 		channel = DiscordChannel.create(discord_id=channel_id)
 		print(f"registered to channel: {channel_id}")
@@ -34,7 +34,7 @@ async def brainrot_register_channel(inx: discord.Interaction):
 @bot.tree.command(description="remove this channel from brainrot integration")
 async def brainrot_deregister_channel(inx: discord.Interaction):
 	channel_id = inx.channel.id # type: ignore
-	channel = DiscordChannel.get_or_none(DiscordChannel.id == channel_id)
+	channel = DiscordChannel.get_or_none(DiscordChannel.discord_id == channel_id)
 	if channel is not None:
 		channel.delete_instance()
 		await inx.response.send_message("✅ deregistered this channel!")
@@ -44,7 +44,7 @@ async def brainrot_deregister_channel(inx: discord.Interaction):
 @bot.tree.command(description="consume all the messages in a channel")
 async def brainrot_consume(inx: discord.Interaction):
 	channel_id = inx.channel.id # type: ignore
-	if DiscordChannel.get_or_none(DiscordChannel.id == channel_id) is None:
+	if DiscordChannel.get_or_none(DiscordChannel.discord_id == channel_id) is None:
 		return await inx.response.send_message("❌ this won't work until you register this channel.")
 	if not hasattr(inx.channel, 'history'):
 		raise ValueError("no history in this channel")
@@ -56,7 +56,7 @@ async def brainrot_consume(inx: discord.Interaction):
 async def on_message(message: discord.Message):
 	if message.author == bot.user:
 		return
-	if DiscordChannel.get_or_none(DiscordChannel.id == message.channel.id) is None:
+	if DiscordChannel.get_or_none(DiscordChannel.discord_id == message.channel.id) is None:
 		return
 	if len(message.attachments) == 0:
 		return
