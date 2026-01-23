@@ -55,10 +55,17 @@ queue.enqueue(200, _load_sounds_from_db)
 queue.enqueue(200, _scan_for_new_sounds)
 
 def play_sound():
-	sound = (QueuedSound.select().order_by(QueuedSound.id.desc())).first()
-	if sound is None:
+	qs = (QueuedSound.select().order_by(QueuedSound.id.desc())).first()
+	if qs is not None:
+		sound = qs.sound
+	else:
 		sound = random.choice(list(_sound_cache.keys()))
 	_sound_cache[sound].play()
 	sound.playcount += 1 # type: ignore
 	sound.save()
+	if qs is not None:
+		qs.delete_instance()
 	print(f"played {sound}")
+
+def load_sound(sound):
+	_sound_cache[sound] = pygame.mixer.Sound(sound.path)

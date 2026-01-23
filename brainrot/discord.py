@@ -74,6 +74,7 @@ async def on_message(message: discord.Message):
 		sound_ = Sound.create(path=path)
 		print(f"saved to {path}")
 		qs = QueuedSound.create(sound=sound_)
+		sound.load_sound(sound_)
 		await message.reply(f"✅ saved to \"{path}\".")
 
 token = DiscordToken.get_or_none()
