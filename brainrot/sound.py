@@ -25,6 +25,10 @@ def _load_sounds_from_db():
 	def task():
 		try:
 			sound = sounds.pop()
+			if not sound.path.is_file():
+				print(f"sound \"{sound}\" missing! deleting...")
+				sound.delete_instance()
+				return
 			_sound_cache[sound] = pygame.mixer.Sound(sound.path)
 			queue.enqueue(200, task)
 		except IndexError:

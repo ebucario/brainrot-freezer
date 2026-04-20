@@ -12,4 +12,4 @@ class UUIDModel(BaseModel):
 
 from brainrot.db.models import *
 db.connect()
-db.create_tables([Sound, DiscordChannel, DiscordToken, QueuedSound])
+db.create_tables([Sound, DiscordChannel, DiscordToken, DiscordMessage, QueuedSound])

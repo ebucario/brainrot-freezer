@@ -5,7 +5,7 @@ from discord.ext.commands import Bot
 from threading import Thread
 
 from brainrot import sound
-from brainrot.db.models import DiscordToken, DiscordChannel, QueuedSound, Sound
+from brainrot.db.models import DiscordMessage, DiscordToken, DiscordChannel, QueuedSound, Sound
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -56,10 +56,13 @@ async def brainrot_consume(inx: discord.Interaction):
 async def on_message(message: discord.Message):
 	if message.author == bot.user:
 		return
-	if DiscordChannel.get_or_none(DiscordChannel.discord_id == message.channel.id) is None:
-		return
 	if len(message.attachments) == 0:
 		return
+	if DiscordChannel.get_or_none(DiscordChannel.discord_id == message.channel.id) is None:
+		return
+	if DiscordMessage.get_or_none(DiscordMessage.discord_id == message.id) is not None:
+		return
+	
 	for attachment in message.attachments:
 		if attachment.content_type.startswith('audio') and attachment.content_type != 'audio/ogg': # type: ignore
 			return await message.reply("ℹ️ currently only brainrot in .ogg format works.")
@@ -76,6 +79,8 @@ async def on_message(message: discord.Message):
 		qs = QueuedSound.create(sound=sound_)
 		sound.load_sound(sound_)
 		await message.reply(f"✅ saved to \"{path}\".")
+	# mark message as handled
+	DiscordMessage.create(discord_id=message.id)
 
 token = DiscordToken.get_or_none()
 

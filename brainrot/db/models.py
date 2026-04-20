@@ -21,3 +21,6 @@ class DiscordChannel(UUIDModel):
 
 class DiscordToken(BaseModel):
 	token = pw.TextField(primary_key=True)
+
+class DiscordMessage(BaseModel):
+	discord_id = pw.IntegerField(primary_key=True)
